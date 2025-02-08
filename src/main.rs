@@ -4,10 +4,11 @@ use locations::LocationTable;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let name = String::from("cities");
-    let mut table = LocationTable::new(name);
-    table.run();
-    table.display();
+    for name in ["nations", "regions", "cities"].iter() {
+        let mut table = LocationTable::new(name.to_string());
+        table.run();
+        table.display();
+    }
 
     Ok(())
 }

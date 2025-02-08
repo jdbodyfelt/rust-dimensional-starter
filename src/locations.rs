@@ -62,7 +62,7 @@ impl LocationTable {
         };
         println!("Data: {}", data);
         // Get the last line starting with '#' - this is the header!
-        let header = data
+        let mut header = data
             .lines()
             .rev()
             .find(|line| line.starts_with('#'))
@@ -78,15 +78,37 @@ impl LocationTable {
             .join("\n");
         // Write the data to a TSV file
         let mut file = File::create(self.target.to_string())?;
+        let region_cols = ["code", "name", "acii_name", "geoname_id"].join("\t");
+        let city_cols = [
+            "geoname_id", "name", "ascii_name", "alternate_names",
+            "latitude", "longitude",
+            "feature_class", "feature_code",
+            "country_code", "cc2",
+            "admin1_code", "admin2_code", "admin3_code", "admin4_code",
+            "population", "elevation", "dem", "timezone",
+            "mod_date"
+        ].join("\t");
+        header = match self.name.as_str() {
+            "nations" => header,
+            "regions" => region_cols,
+            "cities" => city_cols,
+            _ => panic!("Invalid table name")
+        };
         file.write_all(header.as_bytes())?;
         file.write_all(String::from("\n").as_bytes())?;
         file.write_all(data.as_bytes())?;
         println!("WROTE: {}", self.target);
         // Finally, load the data into a dataframe
         let target = self.target.clone();
+        println!("Target: {}", target);
         self.df = CsvReadOptions::default()
             .with_has_header(true)
-            .with_parse_options(CsvParseOptions::default().with_separator(b'\t'))
+            .with_parse_options(
+                CsvParseOptions::default()
+                    .with_separator(b'\t')
+                    .with_encoding(CsvEncoding::Utf8)
+                    .with_try_parse_dates(true)
+            )
             .try_into_reader_with_file_path(Some(target.into()))?
             .finish()?;
         Ok(())
@@ -94,19 +116,17 @@ impl LocationTable {
 
     /* Transform the TSV data into a local dataframe */
     pub fn transform(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let renames = match self.name.as_str() {
-            "nations" => "countryInfo.txt",
-            "regions" => "admin1CodesASCII.txt",
-            "cities" => "cities500.zip",
-            _ => panic!("Invalid table name")
-        };
+ 
 
 
         Ok(())
     }
 
+    pub fn clean(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        std::fs::remove_file(&self.target)?;
+        Ok(())
+    }
 
-    
     /* Load the local dataframe into a database target */
     pub fn load(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
@@ -116,6 +136,8 @@ impl LocationTable {
         let _ = self.extract();
         let _ = self.transform(); 
         let _ = self.load();
+        //let _ = self.clean(); 
+    }
 
     // Print Check
     pub fn display(&self) {
