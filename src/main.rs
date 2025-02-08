@@ -1,18 +1,13 @@
-use polars::prelude::*;
-use reqwest::blocking::get;
-use std::io::Cursor;
+
+mod locations;
+use locations::LocationTable;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    // Fetch the data
-    let url = "https://download.geonames.org/export/dump/countryInfo.txt";
-    let response = get(url)?;
-    let data = response.text()?;
+    let name = String::from("cities");
+    let mut table = LocationTable::new(name);
+    table.run();
+    table.display();
 
-    // Read the content into a DataFrame
-    let cursor = Cursor::new(data);
-    
-
-    println!("{:?}", df);
     Ok(())
 }
