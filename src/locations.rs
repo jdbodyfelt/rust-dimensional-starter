@@ -94,8 +94,18 @@ impl LocationTable {
 
     /* Transform the TSV data into a local dataframe */
     pub fn transform(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let renames = match self.name.as_str() {
+            "nations" => "countryInfo.txt",
+            "regions" => "admin1CodesASCII.txt",
+            "cities" => "cities500.zip",
+            _ => panic!("Invalid table name")
+        };
+
+
         Ok(())
     }
+
+
     
     /* Load the local dataframe into a database target */
     pub fn load(&mut self) -> Result<(), Box<dyn std::error::Error>> {
